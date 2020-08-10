@@ -11,7 +11,7 @@ Prerequisites:
 -Latest version of pip, `pip install --upgrade pip`
 
 Install:  
-Clone this repository, then run `pip3 install -f requirements.txt` in the project directory
+Clone this repository, then run `pip install -r requirements.txt` in the project directory
 
 OPTIONAL: You may wish to create a new virtual environment to install these packages, by running `python3 -m venv envName`.  
 To use this virtual environment, you must run `source envName/bin/activate` in any new terminal.  
