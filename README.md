@@ -14,5 +14,5 @@ Install:
 Clone this repository, then run `pip3 install -f requirements.txt` in the project directory
 
 OPTIONAL: You may wish to create a new virtual environment to install these packages, by running `python3 -m venv envName`.  
-To use this virtual environment, you must run `source envName/bin/activate` in any new terminal (not necessary immediately after creating the environment).  
+To use this virtual environment, you must run `source envName/bin/activate` in any new terminal.  
 (You can replace `envName` in both commands with whatever you want your environment to be called)

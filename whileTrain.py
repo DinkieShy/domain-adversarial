@@ -118,7 +118,7 @@ model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
 
 # model.roi_heads.GroWAdditions = DomainAdversarialHead()
 
-# model.roi_heads.box_predictor.add_module("DomainAdversarial", DomainAdversarialHead())
+model.roi_heads.box_predictor.add_module("DomainAdversarial", DomainAdversarialHead())
 # model.GroWAdditions.add_module("DomainAdversarialClassifier", Classifier())
 # print(model)
 
