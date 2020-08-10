@@ -8,11 +8,12 @@ This was created for the Global Wheat Detection 2020 challenge, https://www.kagg
 # Installation
 Prerequisites:  
 -Cuda 10.0, https://docs.nvidia.com/cuda/cuda-installation-guide-linux/index.html  
+-Python >= 3.6  
 -Latest version of pip, `pip install --upgrade pip`
 
 Install:  
 Clone this repository, then run `pip install -r requirements.txt` in the project directory
 
-OPTIONAL: You may wish to create a new virtual environment to install these packages, by running `python3 -m venv envName`.  
+OPTIONAL: You may wish to create a new virtual environment to install these packages, by running `python -m venv envName`, then updating using `pip install --upgrade pip`.  
 To use this virtual environment, you must run `source envName/bin/activate` in any new terminal.  
 (You can replace `envName` in both commands with whatever you want your environment to be called)
