@@ -3,6 +3,7 @@ import numpy as np
 import os
 import re
 import cv2
+import sys
 
 from PIL import Image
 
@@ -42,6 +43,20 @@ CONFIDENCE_THRESHOLD = 0.25 # Only use predictions with score equal to or above 
 model_path_base = OUTPUT_DIR + "checkpoints/lr-" # Saves best and final for each learning rate
 IN_PROGRESS_PATH = OUTPUT_DIR + "checkpoints/trainingInProgess.pth.tar" # Path to save in-progress model
 LOG_PATH = OUTPUT_DIR + "trainingLog.txt"
+
+REDUCED_OUTPUT = False
+SHOW_IMAGES = False
+
+args = sys.argv
+for i in range(len(args)):
+    if args[i] == "-q":
+        REDUCED_OUTPUT = True
+    elif args[i] == "--quiet":
+        REDUCED_OUTPUT = True
+    elif args[i] == "-i":
+        SHOW_IMAGES = True
+    elif args[i] == "--images":
+        SHOW_IMAGES = True
 
 train_df = pd.read_csv(INPUT_DIR + "fullTrain.csv") # CSV containing the training set
 valid_df = pd.read_csv(INPUT_DIR + "valid.csv") # CSV containing the validation set
@@ -250,9 +265,10 @@ for learningRate, timeToRun in learningRatesToUse:
             images = list(image.to(device) for image in images)
             targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
 
-            # imageToShow = images[0]
-            # cv2.imshow("image", imageToShow.to(torch.device('cpu')).permute(1, 2, 0).numpy())
-            # cv2.waitKey(1)
+            if SHOW_IMAGES:
+                imageToShow = images[0]
+                cv2.imshow("image", imageToShow.to(torch.device('cpu')).permute(1, 2, 0).numpy())
+                cv2.waitKey(1)
 
             loss_dict = model(images, targets)
 
@@ -265,8 +281,10 @@ for learningRate, timeToRun in learningRatesToUse:
             losses.backward()
             optimizer.step()
             iterationCount += 1
-            progress = int(((iterationCount%(3373))/(3373))*50)
-            print("\rProgress: [", "="*progress, ">", " "*(49-progress), "] ", iterationCount, end="", sep="")
+
+            if not REDUCED_OUTPUT:
+                progress = int(((iterationCount%(3373))/(3373))*50)
+                print("\rProgress: [", "="*progress, ">", " "*(49-progress), "] ", iterationCount, end="", sep="")
 
         print("\nIterations:", str(iterationCount))
         saveLogData(iterationCount, loss_hist.value)
