@@ -23,40 +23,42 @@ from torch.utils.data.sampler import SequentialSampler
 from util.Evaluation import calculatePrecision
 from datasets.GWD import WheatDataset
 from models.domainAdversarial import DomainAdversarialHead
+from util.parseConfig import readConfigFile
 
 INPUT_DIR = "./input/"
 OUTPUT_DIR = "./output/"
 IMAGE_DIR = INPUT_DIR + "data/"
 
-# Training options: 
-resume = False # Load from last checkpoint
-learningRatesToUse = [(0.001, 30), (0.0001, 24)] # Learning rates followed by duration to run
-# Setting the duration to -1 causes evaluation after every epoch, then learning rate cascades when validation set performance stops changing
-MIN_EPOCHS = [0, 0] # Minimum amount of epochs to run per learning rate (saves time by not validating)
-epochsUntilChange = 10 #Amount of time performance on the validation set must not change for learning rate to cascade
+REDUCED_OUTPUT = False
+SHOW_IMAGES = False
+configFile = "./configs/config.txt"
 
-# Evaluation options:
-IOU_THRESHOLD = 0.50 # IoU threshold used for precision calculations
-CONFIDENCE_THRESHOLD = 0.25 # Only use predictions with score equal to or above this value
+resume = False
+
+args = sys.argv
+for i in range(len(args)):
+    if args[i] == "-q" or args[i] == "--quiet":
+        REDUCED_OUTPUT = True
+    elif args[i] == "-s" or args[i] == "--show-images":
+        SHOW_IMAGES = True
+    elif args[i] == "-r" or args[i] == "--resume":
+        resume = True
+    elif ".txt" in args[i]:
+        configFile = "./configs/" + args[i]
+
+assert os.path.exists(configFile), "Config file " + configFile + " does not exist"
+
+# Training options: 
+learningRatesToUse = []
+
+trainFile, validFile, IOU_THRESHOLD, CONFIDENCE_THRESHOLD, learningRates = readConfigFile(configFile, INPUT_DIR)
+for i in learningRates:
+    learningRatesToUse.append((i.learningRate, i.epochsToRun, i.epochsUntilChange, i.minEpochs, i.performanceThreshold))
 
 # Saving
 model_path_base = OUTPUT_DIR + "checkpoints/lr-" # Saves best and final for each learning rate
 IN_PROGRESS_PATH = OUTPUT_DIR + "checkpoints/trainingInProgess.pth.tar" # Path to save in-progress model
 LOG_PATH = OUTPUT_DIR + "trainingLog.txt"
-
-REDUCED_OUTPUT = False
-SHOW_IMAGES = False
-
-args = sys.argv
-for i in range(len(args)):
-    if args[i] == "-q":
-        REDUCED_OUTPUT = True
-    elif args[i] == "--quiet":
-        REDUCED_OUTPUT = True
-    elif args[i] == "-i":
-        SHOW_IMAGES = True
-    elif args[i] == "--images":
-        SHOW_IMAGES = True
 
 train_df = pd.read_csv(INPUT_DIR + "fullTrain.csv") # CSV containing the training set
 valid_df = pd.read_csv(INPUT_DIR + "valid.csv") # CSV containing the validation set
@@ -235,7 +237,7 @@ bestPrecision = 0
 lastChanged = 0
 loadedSave = False
 
-for learningRate, timeToRun in learningRatesToUse:
+for learningRate, timeToRun, epochsUntilChange, minEpochs, performanceThreshold in learningRatesToUse:
     previousPrecisionValues = []
     DONE = False
 
@@ -257,12 +259,12 @@ for learningRate, timeToRun in learningRatesToUse:
 
     while not DONE:
         model.train()
-        # model.to(torch.double)
+        model.to(torch.double)
         loss_hist.reset()
         print("")
         for images, targets, image_ids in train_data_loader:
-            # images = list(image.to(device).to(torch.double) for image in images)
-            images = list(image.to(device) for image in images)
+            images = list(image.to(device).to(torch.double) for image in images)
+            # images = list(image.to(device) for image in images)
             targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
 
             if SHOW_IMAGES:
@@ -296,14 +298,14 @@ for learningRate, timeToRun in learningRatesToUse:
         print("Epoch #" + str(epochCount) + " loss: " + str(loss_hist.value))
         epochCount += 1
 
-        if epochCount >= MIN_EPOCHS[learningRatesToUse.index((learningRate, timeToRun))] and timeToRun == -1:
+        if epochCount >= minEpochs and timeToRun == -1:
             # model.to(torch.float)
             precision = evaluate(valid_data_loader, model)
 
             previousPrecisionValues.append(precision)
             if len(previousPrecisionValues) > epochsUntilChange:
                 del previousPrecisionValues[0]
-                if all(abs(precision - previousPrecisionValue) < 0.005 for previousPrecisionValue in previousPrecisionValues):
+                if all(abs(precision - previousPrecisionValue) < performanceThreshold for previousPrecisionValue in previousPrecisionValues):
                     DONE = True
             if precision >= bestPrecision:
                 bestPrecision = precision

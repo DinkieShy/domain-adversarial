@@ -1,0 +1,27 @@
+# CSV's containing datasets should be in ./input/
+train = train.csv
+valid = valid.csv
+
+# Settings for testing on the validation set
+
+# iouThreshold = IoU threshold to consider a prediction a hit
+# confidenceThreshold = ignore predictions with confidence score below this value
+
+iouThreshold = 0.5
+confidenceThreshold = 0.275
+
+# Settings specific for each learning rate. Separate by declaring new learning rates
+
+# learningRate = the learning rate to be used
+# epochsToRun = train with learning rate for a fixed number of epochsToRun (overrides all other settings, doesn't test performance)
+# epochsUntilChange = test on the validation set after each epoch, when performance doesn't change in this many epochs, cascade.
+# performanceThreshold = threshold for what's not considered a performance change (Default: 0.005)
+# minEpochs = train for this many epochs before testing on the validation set starts (Default: 0)
+
+learningRate = 0.001
+epochsToRun = 50
+
+learningRate = 0.0001
+epochsUntilChange = 10
+minEpochs = 10
+performanceThreshold = 0.05
