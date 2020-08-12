@@ -259,12 +259,12 @@ for learningRate, timeToRun, epochsUntilChange, minEpochs, performanceThreshold 
 
     while not DONE:
         model.train()
-        model.to(torch.double)
+        # model.to(torch.double)
         loss_hist.reset()
         print("")
         for images, targets, image_ids in train_data_loader:
-            images = list(image.to(device).to(torch.double) for image in images)
-            # images = list(image.to(device) for image in images)
+            # images = list(image.to(device).to(torch.double) for image in images)
+            images = list(image.to(device) for image in images)
             targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
 
             if SHOW_IMAGES:
