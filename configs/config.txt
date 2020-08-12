@@ -2,6 +2,9 @@
 train = train.csv
 valid = valid.csv
 
+# Name for this config
+name = default
+
 # Settings for testing on the validation set
 
 # iouThreshold = IoU threshold to consider a prediction a hit

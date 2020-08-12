@@ -4,6 +4,7 @@ import os
 import re
 import cv2
 import sys
+import datetime
 
 from PIL import Image
 
@@ -51,17 +52,23 @@ assert os.path.exists(configFile), "Config file " + configFile + " does not exis
 # Training options: 
 learningRatesToUse = []
 
-trainFile, validFile, IOU_THRESHOLD, CONFIDENCE_THRESHOLD, learningRates = readConfigFile(configFile, INPUT_DIR)
+trainFile, validFile, IOU_THRESHOLD, CONFIDENCE_THRESHOLD, learningRates, configName = readConfigFile(configFile, INPUT_DIR)
 for i in learningRates:
     learningRatesToUse.append((i.learningRate, i.epochsToRun, i.epochsUntilChange, i.minEpochs, i.performanceThreshold))
+
+currentTime = datetime.datetime.today()
+currentTimeString = str(currentTime.year) + ":" + str(currentTime.month) + ":" + \
+    str(currentTime.day) + "_" + str(currentTime.hour) + ":" + str(currentTime.minute)
+
+OUTPUT_DIR += configName + "_" + currentTimeString + "/"
 
 # Saving
 model_path_base = OUTPUT_DIR + "checkpoints/lr-" # Saves best and final for each learning rate
 IN_PROGRESS_PATH = OUTPUT_DIR + "checkpoints/trainingInProgess.pth.tar" # Path to save in-progress model
 LOG_PATH = OUTPUT_DIR + "trainingLog.txt"
 
-train_df = pd.read_csv(INPUT_DIR + "fullTrain.csv") # CSV containing the training set
-valid_df = pd.read_csv(INPUT_DIR + "valid.csv") # CSV containing the validation set
+train_df = pd.read_csv(INPUT_DIR + trainFile) # CSV containing the training set
+valid_df = pd.read_csv(INPUT_DIR + validFile) # CSV containing the validation set
 
 directories = [INPUT_DIR, OUTPUT_DIR, IMAGE_DIR, OUTPUT_DIR + "checkpoints/"]
 
@@ -133,11 +140,7 @@ in_features = model.roi_heads.box_predictor.cls_score.in_features
 # replace the pre-trained head with a new one
 model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
 
-# model.roi_heads.GroWAdditions = DomainAdversarialHead()
-
-model.roi_heads.box_predictor.add_module("DomainAdversarial", DomainAdversarialHead())
-# model.GroWAdditions.add_module("DomainAdversarialClassifier", Classifier())
-# print(model)
+# model.roi_heads.box_predictor.add_module("DomainAdversarial", DomainAdversarialHead())
 
 class Averager:
     def __init__(self):
@@ -224,7 +227,7 @@ def loadCheckpoint(model, optimizer):
     saved = torch.load(IN_PROGRESS_PATH)
     model.load_state_dict(saved['state_dict'])
     optimizer.load_state_dict(saved['optimizer'])
-    return model, optimizer, saved['epoch']
+    return model, optimizer, saved['epoch'], saved['outputPath']
 
 def saveLogData(iterationCount, loss):
     logFile = open(LOG_PATH, "a")
@@ -246,10 +249,15 @@ for learningRate, timeToRun, epochsUntilChange, minEpochs, performanceThreshold 
 
     if resume:
       if not loadedSave:
-        model, optimizer, epochCount = loadCheckpoint(model, optimizer)
+        model, optimizer, epochCount, OUTPUT_DIR = loadCheckpoint(model, optimizer)
         iterationCount = epochCount * 3373
         loadedSave = True
         print("Loaded previous model state")
+
+        model_path_base = OUTPUT_DIR + "checkpoints/lr-"
+        IN_PROGRESS_PATH = OUTPUT_DIR + "checkpoints/trainingInProgess.pth.tar"
+        LOG_PATH = OUTPUT_DIR + "trainingLog.txt"
+
       if epochCount > timeToRun + lastChanged and timeToRun != -1:
         lastChanged += timeToRun
         continue
@@ -316,7 +324,7 @@ for learningRate, timeToRun, epochsUntilChange, minEpochs, performanceThreshold 
             DONE = True
             print("Fixed epoch count reached")
 
-        state = {'epoch': epochCount, 'state_dict': model.state_dict(), 'optimizer': optimizer.state_dict()}
+        state = {'epoch': epochCount, 'state_dict': model.state_dict(), 'optimizer': optimizer.state_dict(), 'outputPath': OUTPUT_DIR}
         torch.save(state, IN_PROGRESS_PATH)
     print("\nDone with learning rate:", learningRate, "\n")
     torch.save(model.state_dict(), model_path_base + str(learningRatesToUse.index((learningRate, timeToRun))) + "-final.pth")

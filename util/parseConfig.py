@@ -31,6 +31,7 @@ def readConfigFile(filename, INPUT_DIR):
     iouThreshold = -1
     confidenceThreshold = -1
     learningRates = [LearningRateCascade()]
+    name = ""
 
     for line in content:
         if line[0] != "#":
@@ -65,6 +66,9 @@ def readConfigFile(filename, INPUT_DIR):
             elif splitLine[0] == "confidencethreshold":
                 confidenceThreshold == splitLine[1]
 
+            elif splitLine[0] == "name":
+                name = splitLine[1]
+
     validating = False
     for i in learningRates:
         i.assertValid()
@@ -75,7 +79,7 @@ def readConfigFile(filename, INPUT_DIR):
     if validating:
         assert path.exists(INPUT_DIR + validFile), "Validation set does not exist"
     
-    return trainFile, validFile, iouThreshold, confidenceThreshold, learningRates
+    return trainFile, validFile, iouThreshold, confidenceThreshold, learningRates, name
     
 if __name__ == "__main__":
     trainFile, validFile, iouThreshold, confidenceThreshold, learningRates = readConfigFile("configs/config.txt", "input/")
