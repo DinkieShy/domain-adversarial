@@ -25,6 +25,7 @@ from util.Evaluation import calculatePrecision
 from datasets.GWD import WheatDataset
 from models.domainAdversarial import DomainAdversarialHead
 from util.parseConfig import readConfigFile
+from models.fasterRCNNWrapper import customFasterRCNN
 
 INPUT_DIR = "./input/"
 OUTPUT_DIR = "./output/"
@@ -56,9 +57,11 @@ trainFile, validFile, IOU_THRESHOLD, CONFIDENCE_THRESHOLD, learningRates, config
 for i in learningRates:
     learningRatesToUse.append((i.learningRate, i.epochsToRun, i.epochsUntilChange, i.minEpochs, i.performanceThreshold))
 
+print(learningRatesToUse)
+
 currentTime = datetime.datetime.today()
-currentTimeString = str(currentTime.year) + ":" + str(currentTime.month) + ":" + \
-    str(currentTime.day) + "_" + str(currentTime.hour) + ":" + str(currentTime.minute)
+currentTimeString = str(currentTime.year) + "-" + str(currentTime.month) + "-" + \
+    str(currentTime.day) + "_" + str(currentTime.hour) + "-" + str(currentTime.minute)
 
 OUTPUT_DIR += configName + "_" + currentTimeString + "/"
 
@@ -117,8 +120,6 @@ def get_train_transform():
     return A.Compose([
         A.Flip(p=0.5),
         A.Rotate(20, p=0.9),
-        # rescale aspect ratio - check if it looks realistic
-        # A.RandomSizedCrop((975, 1020), 1024, 1024, (0.75, 1.33), p=0.8),
         A.RandomSizedBBoxSafeCrop(1024, 1024, 0.2),
         ToTensorV2(p=1.0)
     ], bbox_params={'format': 'pascal_voc', 'label_fields': ['labels']})
@@ -138,7 +139,7 @@ num_classes = 2  # 1 class (wheat) + background
 in_features = model.roi_heads.box_predictor.cls_score.in_features
 
 # replace the pre-trained head with a new one
-model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
+model.roi_heads.box_predictor = customFasterRCNN(in_features, num_classes)
 
 # model.roi_heads.box_predictor.add_module("DomainAdversarial", DomainAdversarialHead())
 
@@ -241,6 +242,7 @@ lastChanged = 0
 loadedSave = False
 
 for learningRate, timeToRun, epochsUntilChange, minEpochs, performanceThreshold in learningRatesToUse:
+    print("STARTED WITH RATE ", str(learningRate))
     previousPrecisionValues = []
     DONE = False
 
@@ -254,7 +256,7 @@ for learningRate, timeToRun, epochsUntilChange, minEpochs, performanceThreshold 
         loadedSave = True
         print("Loaded previous model state")
 
-        model_path_base = OUTPUT_DIR + "checkpoints/lr-"
+        model_path_base = OUTPUT_DIR + "lr-"
         IN_PROGRESS_PATH = OUTPUT_DIR + "checkpoints/trainingInProgess.pth.tar"
         LOG_PATH = OUTPUT_DIR + "trainingLog.txt"
 
@@ -317,7 +319,7 @@ for learningRate, timeToRun, epochsUntilChange, minEpochs, performanceThreshold 
                     DONE = True
             if precision >= bestPrecision:
                 bestPrecision = precision
-                torch.save(model.state_dict(), model_path_base + str(learningRatesToUse.index((learningRate, timeToRun))) + "-best.pth")
+                torch.save(model.state_dict(), model_path_base + str(learningRatesToUse.index((learningRate, timeToRun, epochsUntilChange, minEpochs, performanceThreshold))) + "-best.pth")
 
             print("Precision:", precision)
         elif epochCount >= timeToRun+lastChanged and timeToRun != -1:
@@ -327,7 +329,7 @@ for learningRate, timeToRun, epochsUntilChange, minEpochs, performanceThreshold 
         state = {'epoch': epochCount, 'state_dict': model.state_dict(), 'optimizer': optimizer.state_dict(), 'outputPath': OUTPUT_DIR}
         torch.save(state, IN_PROGRESS_PATH)
     print("\nDone with learning rate:", learningRate, "\n")
-    torch.save(model.state_dict(), model_path_base + str(learningRatesToUse.index((learningRate, timeToRun))) + "-final.pth")
+    torch.save(model.state_dict(), model_path_base + str(learningRatesToUse.index((learningRate, timeToRun, epochsUntilChange, minEpochs, performanceThreshold))) + "-final.pth")
     lastChanged = epochCount
 
 print("\nCompleted")

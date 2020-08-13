@@ -82,8 +82,8 @@ def readConfigFile(filename, INPUT_DIR):
     return trainFile, validFile, iouThreshold, confidenceThreshold, learningRates, name
     
 if __name__ == "__main__":
-    trainFile, validFile, iouThreshold, confidenceThreshold, learningRates = readConfigFile("configs/config.txt", "input/")
-    print(trainFile, validFile, iouThreshold, confidenceThreshold)
+    trainFile, validFile, iouThreshold, confidenceThreshold, learningRates, configName = readConfigFile("configs/config.txt", "input/")
+    print(configName, "---------------------------", trainFile, validFile, iouThreshold, confidenceThreshold, sep="\n")
     for i in learningRates:
         print()
         print(i)
