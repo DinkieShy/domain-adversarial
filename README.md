@@ -17,3 +17,11 @@ Clone this repository, then run `pip install -r requirements.txt` in the project
 OPTIONAL: You may wish to create a new virtual environment to install these packages, by running `python -m venv envName`, then updating using `pip install --upgrade pip`.  
 To use this virtual environment, you must run `source envName/bin/activate` in any new terminal.  
 (You can replace `envName` in both commands with whatever you want your environment to be called)
+
+# TODO:
+Evaluation using the COCO api  
+Detection script  
+	-Flag to output a sample of images with detections annotated  
+	-Flag to output results in COCO format  
+Make graph once training is complete using trainingLog.txt  
+
