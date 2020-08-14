@@ -242,7 +242,7 @@ lastChanged = 0
 loadedSave = False
 
 for learningRate, timeToRun, epochsUntilChange, minEpochs, performanceThreshold in learningRatesToUse:
-    print("STARTED WITH RATE ", str(learningRate))
+    print("STARTED WITH RATE", str(learningRate))
     previousPrecisionValues = []
     DONE = False
 
