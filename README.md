@@ -23,18 +23,18 @@ To use this virtual environment, you must run `source envName/bin/activate` in a
 Create a config file in `configs/` [(an example is present)](./configs/config.txt), then run `python whileTrain.py configFile.txt`  
 
 Training flags:  
--q/--quiet - Reduce output  
--s/--show_images - Show images while training (only useful for verifying data augmentation)  
--r/--resume - Resume training from a previous run
+`-q` | `--quiet`       - Reduce output  
+`-s` | `--show_images` - Show images while training (only useful for verifying data augmentation)  
+`-r` | `--resume`      - Resume training from a previous run
 
 ## Inference
 Run `python inference.py`, passing paths to models (.pth files) and a test set  
 Results will be saved in the same directories as the models
 
 Inference flags:  
--c/--coco - Output results in COCO format, and create `cocoDataset.json`  
--s x/--show x - Visualise a sample of detections, with x being the number of samples  
--t x/--threshold x - Don't include detections with a confidence score below this threshold
+`-c`   | `--coco`        - Output results in COCO format, and create `cocoDataset.json`  
+`-s x` | `--show x`      - Visualise a sample of detections, with x being the number of samples  
+`-t x` | `--threshold x` - Don't include detections with a confidence score below this threshold
 
 When showing images, the colour of the bounding box represents the confidence score.  
 Red - less then 0.6  
