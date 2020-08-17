@@ -34,7 +34,7 @@ def calculatePrecision(outputs, targets, image_ids, IOUTHRESHOLD, CONFIDENCE_THR
             predictedBoxes.append(formattedOutputs[image_ids[i]][ii]["box"])
             predictionScores.append(formattedOutputs[image_ids[i]][ii]["score"])
 
-        newCombination = {"targetBoxes": targetBoxes, "predictedBoxes":predictedBoxes, "predictionScores":predictionScores, "imageSize": [len(images[i][0]), len(images[i][0][0])]}
+        newCombination = {"targetBoxes": targetBoxes, "predictedBoxes":predictedBoxes, "predictionScores":predictionScores, "imageSize": [1024, 1024]}
         combinedOutputs[image_ids[i]] = newCombination
 
     #Combined format: combinedOutputs[image id](["targetBoxes"] | ["predictedBoxes"] | ["predictionScores"] | ["imageSize"])[index of expected array]
