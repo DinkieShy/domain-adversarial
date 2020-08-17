@@ -4,12 +4,12 @@ import datetime
 import os
 
 def convertDataset(datasetFile = ""):
-    INPUT_DIR = "../input/"
+    INPUT_DIR = "./input/"
 
     assert datasetFile != "", "No dataset passed"
-    assert os.path.exists(INPUT_DIR + datasetFile), INPUT_DIR + datasetFile + " does not exist"
+    assert os.path.exists(datasetFile), datasetFile + " does not exist"
 
-    csvFile = open(INPUT_DIR + datasetFile, newline='')
+    csvFile = open(datasetFile, newline='')
     data = list(csv.reader(csvFile))
 
     del data[0] #remove column titles

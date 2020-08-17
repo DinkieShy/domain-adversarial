@@ -26,30 +26,43 @@ from util.DatasetToCoco import convertDataset
 import json
 
 IMG_DIR = './input/data/'
+INPUT_DIR = "./input/"
 
 WEIGHTS_FILES = []
 testFile = ""
 COCO = False
+SHOW_IMAGES = False
 
 args = sys.argv
 for i in range(len(args)):
     if ".pth" in args[i]:
         WEIGHTS_FILES.append(args[i])
     elif ".csv" in args[i]:
-        testFile = args[i]
+        testFile = INPUT_DIR + args[i]
     elif args[i] == "-c" or args[i] == "--coco":
         COCO=True
+    elif args[i] == "-s" or args[i] == "--show":
+        SHOW_IMAGES = True
 
 assert len(WEIGHTS_FILES) > 0, "Model not selected, be sure to pass a weights file"
 assert testFile != "", "Test set not selected, be sure to pass a csv file containing a test set"
 
+OUTPUT_DIRS = [weightsFile[:-4] + "/" for weightsFile in WEIGHTS_FILES]
+
+for outputDir in OUTPUT_DIRS:
+    assert os.path.exists(outputDir[:-1] + ".pth") and os.path.isfile(outputDir[:-1] + ".pth"), "Model file " + outputDir[:-1] + ".pth does not exist!"
+    if not os.path.exists(outputDir):
+        os.mkdir(outputDir)
+
+# if SHOW_IMAGES and not os.path.exists("./output/results/
+
 if COCO:
     print("Converting dataset to COCO format...")
-    convertDataset(testFile)
+    convertDataset(testFile) #doesn't return anything, but creates files necessary later for the COCO api
 
 imageFiles = []
 
-imageIDs = pd.read_csv("./test.csv")['image_id'].unique()
+imageIDs = pd.read_csv(testFile)['image_id'].unique()
 
 for imageID in imageIDs:
     imageFiles.append(IMG_DIR + imageID)
@@ -139,12 +152,6 @@ def format_bbox_string(boxes):
         strings.append([int(box[0]), int(box[1]), int(box[2]), int(box[3])])
     return strings
 
-imageIDFile = open("./output/imageIDs.json")
-imageIDConvert = dict(json.load(imageIDFile))
-imageIDFile.close()
-
-print(len(imageIDConvert))
-
 for weights in WEIGHTS_FILES:
     model.load_state_dict(torch.load(weights))
 
@@ -182,6 +189,10 @@ for weights in WEIGHTS_FILES:
             results.append(result)
 
         if COCO:
+            imageIDFile = open("./input/imageIDs.json")
+            imageIDConvert = dict(json.load(imageIDFile))
+            imageIDFile.close()
+
             cocoResults = []
 
             for result in results:
@@ -193,12 +204,13 @@ for weights in WEIGHTS_FILES:
                         'score': result['score'][i]
                     })
 
-            cocoResultsFile = open("./output/cocoResults-" + str(WEIGHTS_FILES.index(weights)) + ".json", 'w')
+            cocoResultsFile = open(OUTPUT_DIRS[WEIGHTS_FILES.index(weights)] + "cocoResults.json", 'w')
             cocoResultsFile.write(json.dumps(cocoResults))
             cocoResultsFile.close()
         else:
-            resultsFile = open("./output/detections.json", "w")
+            resultsFile = open(OUTPUT_DIRS[WEIGHTS_FILES.index(weights)] + "detections.json", "w")
             resultsFile.write(json.dumps(results))
             resultsFile.close()
+    print("Results saved to", OUTPUT_DIRS[WEIGHTS_FILES.index(weights)])
 
     print("Done!")

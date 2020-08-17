@@ -18,6 +18,28 @@ OPTIONAL: You may wish to create a new virtual environment to install these pack
 To use this virtual environment, you must run `source envName/bin/activate` in any new terminal.  
 (You can replace `envName` in both commands with whatever you want your environment to be called)
 
+# Use
+## Training
+Create a config file in `configs/` [(an example is present)](./configs/config.txt), then run `python whileTrain.py configFile.txt`  
+
+Training flags:  
+-q/--quiet - Reduce output  
+-s/--show_images - Show images while training (only useful for verifying data augmentation)  
+-r/--resume - Resume training from a previous run
+
+## Inference
+Run `python inference.py`, passing paths to models (.pth files) and a test set  
+Results will be saved in the same directories as the models
+
+Inference flags:  
+-c/--coco - Output results in COCO format, and create `cocoDataset.json`  
+-s/--show - ~Not Yet Implemented~ Visualise a sample of detections
+
+# Evaluation
+It is recommended that the COCO api is used for error evaluation https://github.com/wenmengzhou/cocoapi/tree/add_analyze_func  
+In order to use analyze() (currently only provided in MATLAB, [based on work by Hoiem et al](http://dhoiem.cs.illinois.edu/projects/detectionAnalysis/)), replace `cocoapi/PythonAPI/pycocotools` with the version from [this PR](https://github.com/wenmengzhou/cocoapi/tree/add_analyze_func)  
+Set -c flag when running the inference script to produce `./input/cocoDataset.json` which can be used for COCO evaluation, along with the cocoResults.json generated at the model path
+
 # TODO:
 Evaluation using the COCO api  
 Detection script  
