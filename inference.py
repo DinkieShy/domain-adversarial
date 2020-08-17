@@ -4,6 +4,7 @@ import os
 import re
 import sys
 import cv2
+import random
 
 from PIL import Image
 
@@ -32,6 +33,8 @@ WEIGHTS_FILES = []
 testFile = ""
 COCO = False
 SHOW_IMAGES = False
+IMAGES_TO_SHOW = 0
+DETECTION_THRESHOLD = 0
 
 args = sys.argv
 for i in range(len(args)):
@@ -43,6 +46,9 @@ for i in range(len(args)):
         COCO=True
     elif args[i] == "-s" or args[i] == "--show":
         SHOW_IMAGES = True
+        IMAGES_TO_SHOW = int(args[i+1])
+    elif args[i] == "-t" or args[i] == "--threshold":
+        DETECTION_THRESHOLD = int(args[i+1])
 
 assert len(WEIGHTS_FILES) > 0, "Model not selected, be sure to pass a weights file"
 assert testFile != "", "Test set not selected, be sure to pass a csv file containing a test set"
@@ -85,7 +91,7 @@ class WheatTestDataset(Dataset):
 
         image_id = self.image_ids[index]
 
-        image = cv2.imread(f'{self.image_dir}/{image_id}.jpg', cv2.IMREAD_COLOR)
+        image = cv2.imread(self.image_dir + "/" + image_id + ".jpg", cv2.IMREAD_COLOR)
         image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB).astype(np.float32)
         image /= 255.0
 
@@ -158,8 +164,11 @@ for weights in WEIGHTS_FILES:
     x = model.to(device)
     model.eval()
 
-    detection_threshold = 0
     results = []
+
+    imagesLeft = len(test_data_loader)
+    imagesSaved = 0
+    imageChance = float(IMAGES_TO_SHOW/imagesLeft)
 
     for images, image_ids in test_data_loader:
 
@@ -171,10 +180,28 @@ for weights in WEIGHTS_FILES:
             boxes = outputs[i]['boxes'].data.cpu().numpy()
             scores = outputs[i]['scores'].data.cpu().numpy()
             
-            boxes = boxes[scores >= detection_threshold].astype(np.int32)
-            scores = scores[scores >= detection_threshold]
+            boxes = boxes[scores >= DETECTION_THRESHOLD].astype(np.int32)
+            scores = scores[scores >= DETECTION_THRESHOLD]
             scores = [float(score) for score in scores]
             image_id = image_ids[i]
+
+            if SHOW_IMAGES and imagesSaved <= IMAGES_TO_SHOW:
+                if IMAGES_TO_SHOW-imagesSaved == imagesLeft or random.random() > imageChance:
+                    imageToSave = image.permute(1,2,0).cpu().numpy()
+                    for ii in range(len(boxes)):
+                        start = (boxes[ii][0], boxes[ii][1])
+                        stop = (boxes[ii][2], boxes[ii][3])
+                        if scores[ii] < 0.6:
+                            colour = (0, 0, 255)
+                        elif scores[ii] < 0.9:
+                            colour = (0, 255, 255)
+                        else:
+                            colour = (0, 255, 0)
+                        cv2.rectangle(imageToSave, start, stop, colour, 2)
+                    cv2.imwrite(OUTPUT_DIRS[WEIGHTS_FILES.index(weights)] + image_id + ".jpg", imageToSave*255)
+                    imagesSaved += 1
+
+            imagesLeft -= 1
             
             boxes[:, 2] = boxes[:, 2] - boxes[:, 0]
             boxes[:, 3] = boxes[:, 3] - boxes[:, 1]

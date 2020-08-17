@@ -33,7 +33,13 @@ Results will be saved in the same directories as the models
 
 Inference flags:  
 -c/--coco - Output results in COCO format, and create `cocoDataset.json`  
--s/--show - ~Not Yet Implemented~ Visualise a sample of detections
+-s x/--show x - Visualise a sample of detections, with x being the number of samples  
+-t x/--threshold x - Don't include detections with a confidence score below this threshold
+
+When showing images, the colour of the bounding box represents the confidence score.  
+Red - less then 0.6  
+Yellow - less than 0.9  
+Green - 0.9 and above
 
 # Evaluation
 It is recommended that the COCO api is used for error evaluation https://github.com/wenmengzhou/cocoapi/tree/add_analyze_func  
