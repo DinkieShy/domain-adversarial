@@ -1,6 +1,7 @@
 # Contains scripts for calculating evaluation metrics
 
 from .Boxes import BoundingBox, TargetBoundingBox
+import numpy as np
 
 def calculatePrecision(outputs, targets, image_ids, IOUTHRESHOLD, CONFIDENCE_THRESHOLD):
     #Outputs are in the form of a dict
