@@ -286,8 +286,6 @@ for learningRate, timeToRun, epochsUntilChange, minEpochs, performanceThreshold 
 
             loss_dict = model(images, targets)
 
-            print(loss_dict)
-
             losses = sum(loss for loss in loss_dict.values())
             loss_value = losses.item()
 
