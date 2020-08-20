@@ -47,9 +47,5 @@ In order to use analyze() (currently only provided in MATLAB, [based on work by 
 Set -c flag when running the inference script to produce `./input/cocoDataset.json` which can be used for COCO evaluation, along with the cocoResults.json generated at the model path
 
 # TODO:
-Evaluation using the COCO api  
-Detection script  
-	-Flag to output a sample of images with detections annotated  
-	-Flag to output results in COCO format  
 Make graph once training is complete using trainingLog.txt  
-
+CLI flag for switching between models
