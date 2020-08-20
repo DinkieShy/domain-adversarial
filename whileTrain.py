@@ -311,8 +311,6 @@ for learningRate, timeToRun, epochsUntilChange, minEpochs, performanceThreshold 
         print("Epoch #" + str(epochCount) + " loss: " + str(loss_hist.value))
         epochCount += 1
 
-        input()
-
         if epochCount >= minEpochs and timeToRun == -1:
             # model.to(torch.float)
             precision = evaluate(valid_data_loader, model)
