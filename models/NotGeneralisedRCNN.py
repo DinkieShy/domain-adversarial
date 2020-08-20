@@ -114,9 +114,9 @@ class DomainAwareRCNN(FasterRCNN):
         detections = self.transform.postprocess(detections, images.image_sizes, original_image_sizes)
 
         losses = {}
+        losses.update(domain_losses)
         losses.update(detector_losses)
         losses.update(proposal_losses)
-        losses.update(domain_losses)
 
         if torch.jit.is_scripting():
             if not self._has_warned:

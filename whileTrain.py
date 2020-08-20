@@ -287,6 +287,7 @@ for learningRate, timeToRun, epochsUntilChange, minEpochs, performanceThreshold 
             loss_dict = model(images, targets)
 
             losses = sum(loss for loss in loss_dict.values())
+
             loss_value = losses.item()
 
             loss_hist.send(loss_value)
@@ -309,6 +310,8 @@ for learningRate, timeToRun, epochsUntilChange, minEpochs, performanceThreshold 
 
         print("Epoch #" + str(epochCount) + " loss: " + str(loss_hist.value))
         epochCount += 1
+
+        input()
 
         if epochCount >= minEpochs and timeToRun == -1:
             # model.to(torch.float)
