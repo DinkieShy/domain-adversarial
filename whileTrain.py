@@ -23,9 +23,8 @@ from torch.utils.data.sampler import SequentialSampler
 
 from util.Evaluation import calculatePrecision
 from datasets.GWD import WheatDataset
-from models.domainAdversarial import DomainAdversarialHead
 from util.parseConfig import readConfigFile
-from models.fasterRCNNWrapper import customFasterRCNN
+from models.NotGeneralisedRCNN import DomainAwareRCNN
 
 INPUT_DIR = "./input/"
 OUTPUT_DIR = "./output/"
@@ -36,6 +35,8 @@ SHOW_IMAGES = False
 configFile = "./configs/config.txt"
 
 resume = False
+
+#add flag for using either vanilla fasterrcnn and our domain head
 
 args = sys.argv
 for i in range(len(args)):
@@ -56,8 +57,6 @@ learningRatesToUse = []
 trainFile, validFile, IOU_THRESHOLD, CONFIDENCE_THRESHOLD, learningRates, configName = readConfigFile(configFile, INPUT_DIR)
 for i in learningRates:
     learningRatesToUse.append((i.learningRate, i.epochsToRun, i.epochsUntilChange, i.minEpochs, i.performanceThreshold))
-
-print(learningRatesToUse)
 
 currentTime = datetime.datetime.today()
 currentTimeString = str(currentTime.year) + "-" + str(currentTime.month) + "-" + \
@@ -131,17 +130,20 @@ def get_valid_transform():
 
 #--- Creating the model -----------------------------------------------------------------------------------------------------
 
-model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
+# model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True) #need to replace THIS
+# #replace forward pass of generalizedrcnn, add domain forward pass at line 99
 
-num_classes = 2  # 1 class (wheat) + background
+# num_classes = 2  # 1 class (wheat) + background
 
-# get number of input features for the classifier
-in_features = model.roi_heads.box_predictor.cls_score.in_features
+# # get number of input features for the classifier
+# in_features = model.roi_heads.box_predictor.cls_score.in_features
 
-# replace the pre-trained head with a new one
-model.roi_heads.box_predictor = customFasterRCNN(in_features, num_classes)
+# # replace the pre-trained head with a new one
+# model.roi_heads.box_predictor = customFasterRCNN(in_features, num_classes)
 
-# model.roi_heads.box_predictor.add_module("DomainAdversarial", DomainAdversarialHead())
+# # model.roi_heads.box_predictor.add_module("DomainAdversarial", DomainAdversarialHead())
+
+model = DomainAwareRCNN(num_classes=2, num_domains=10)
 
 class Averager:
     def __init__(self):
@@ -283,6 +285,8 @@ for learningRate, timeToRun, epochsUntilChange, minEpochs, performanceThreshold 
                 cv2.waitKey(1)
 
             loss_dict = model(images, targets)
+
+            print(loss_dict)
 
             losses = sum(loss for loss in loss_dict.values())
             loss_value = losses.item()
