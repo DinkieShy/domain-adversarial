@@ -9,7 +9,7 @@ class BoundingBox():
         self.width = width
         self.height = height
 
-    def intersect(self, box2):
+    def intersect(self, box2, recursive = False):
         #Returns the area of the intersection of two boxes
 
         #[top left, top right, bottom left, bottom right] 
@@ -33,7 +33,10 @@ class BoundingBox():
             return (box2.x+box2.width - self.x)*(box2.y+box2.height - self.y)
 
         else: #no intersection
-            return 0
+            if recursive:
+                return 0
+            else:
+                box2.intersect(self, True)
 
     def union(self, box2):
         return ((self.height*self.width)+(box2.height*box2.width)) - self.intersect(box2)
