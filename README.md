@@ -27,6 +27,10 @@ Training flags:
 `-s` | `--show_images` - Show images while training (only useful for verifying data augmentation)  
 `-r` | `--resume`      - Resume training from a previous run
 
+### Resuming
+During training, an in-progress model is saved after every epoch. To resume training, use the `-r` flag at runtime (as above) with the config file of the regime you want to resume. Doing this will resume the most recent entry in `output/` with a matching config name (note: this is the name set *within* the file, *not* the name of the file).  
+In order to resume training a different attempt, you can simply rename the folder containing the output you wish to resume from and make a new config file, or simply change the time to make it the most recent.
+
 ## Inference
 Run `python inference.py`, passing paths to models (.pth files) and a test set  
 Results will be saved in the same directories as the models
