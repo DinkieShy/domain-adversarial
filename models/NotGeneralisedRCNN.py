@@ -103,11 +103,16 @@ class DomainAwareRCNN(FasterRCNN):
             features = OrderedDict([('0', features)])
         proposals, proposal_losses = self.rpn(images, features, targets)
  
-        tmp_proposals, tmp_matched_idxs, tmp_labels, tmp_regression_targets = self.roi_heads.select_training_samples(proposals, targets)
+
+        if self.training:
+            tmp_proposals, _, tmp_labels, _ = self.roi_heads.select_training_samples(proposals, targets)
+        else:
+            tmp_proposals = proposals
+            tmp_labels = None
         box_features = self.roi_heads.box_roi_pool(features, tmp_proposals, images.image_sizes)
         box_features = self.roi_heads.box_head(box_features)
-        _, domain_losses = self.domainHead(box_features, targets, tmp_proposals, tmp_matched_idxs, tmp_labels, tmp_regression_targets)
-        #roi_heads.py, line 746. Only select regression targets from proposals that line up to a ground-truth. Do the same with domains
+        _, domain_losses = self.domainHead(box_features, tmp_proposals, tmp_labels)
+
 
         detections, detector_losses = self.roi_heads(features, proposals, images.image_sizes, targets)
 

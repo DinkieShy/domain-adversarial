@@ -40,23 +40,26 @@ def calculatePrecision(outputs, targets, image_ids, IOUTHRESHOLD, CONFIDENCE_THR
     #Combined format: combinedOutputs[image id](["targetBoxes"] | ["predictedBoxes"] | ["predictionScores"] | ["imageSize"])[index of expected array]
     #Note: predictedBoxes and predictionScores will have the same length, but targetBoxes may not
 
-    targetBoxes = []
-    for box in combinedOutputs["targetBoxes"]:
-        targetBoxes.append(TargetBoundingBox(box[0], box[1], box[2]-box[0], box[3]-box[1]))
-
-    predictedBoxes = []
-    for box in combinedOutputs["predictedBoxes"]:
-        predictedBoxes.append(BoundingBox(box[0], box[1], box[2]-box[0], box[3]-box[1]))
-
-    totalBoxes = len(predictedBoxes)
+    totalBoxes = 0
     truePositive = 0
 
-    for targetBox in targetBoxes:
-        for i in range(len(predictedBoxes)-1, -1, -1):
-            fit = targetBox.intersect(predictedBoxes[i])
-            if fit/targetBox.union(predictedBoxes[i]) >= IOUTHRESHOLD:
-                truePositive += 1
-                del predictedBoxes[i] #Remove predicted box from list if it hit a target box (can't hit more than one)
+    for imageId in image_ids:
+        targetBoxes = []
+        for box in combinedOutputs[imageId]["targetBoxes"]:
+            targetBoxes.append(TargetBoundingBox(box[0], box[1], box[2]-box[0], box[3]-box[1]))
+
+        predictedBoxes = []
+        for box in combinedOutputs[imageId]["predictedBoxes"]:
+            predictedBoxes.append(BoundingBox(box[0], box[1], box[2]-box[0], box[3]-box[1]))
+
+        totalBoxes += len(predictedBoxes)
+
+        for targetBox in targetBoxes:
+            for i in range(len(predictedBoxes)-1, -1, -1):
+                fit = targetBox.intersect(predictedBoxes[i])
+                if fit/targetBox.union(predictedBoxes[i]) >= IOUTHRESHOLD:
+                    truePositive += 1
+                    del predictedBoxes[i] #Remove predicted box from list if it hit a target box (can't hit more than one)
 
     # print(truePositive, "correct out of", totalBoxes, "predictions.")
 

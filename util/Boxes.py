@@ -36,7 +36,7 @@ class BoundingBox():
             if recursive:
                 return 0
             else:
-                box2.intersect(self, True)
+                return box2.intersect(self, True)
 
     def union(self, box2):
         return ((self.height*self.width)+(box2.height*box2.width)) - self.intersect(box2)

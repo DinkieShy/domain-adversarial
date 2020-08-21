@@ -40,12 +40,14 @@ class DomainAdversarialHead(nn.Module):
     self.classifier = Classifier(in_features, domains)
     self.domain_count = domains
 
-  def forward(self, features, targets, proposals, matched_idxs, labels, regression_targets):
+  def forward(self, features, proposals, labels=None):
     y = self.gradientReversal.forward(features)
     predictions = self.classifier(y)
 
-    labels = torch.cat(labels, dim=0)
+    if self.training:
+      labels = torch.cat(labels, dim=0)
+      domainLoss = {"domainLoss": F.cross_entropy(predictions, labels)}
+    else:
+      domainLoss = {}
 
-    losses = F.cross_entropy(predictions, labels)
-
-    return predictions, {"domainLoss": losses}
+    return predictions, domainLoss

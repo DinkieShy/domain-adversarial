@@ -298,7 +298,7 @@ for learningRate, timeToRun, epochsUntilChange, minEpochs, performanceThreshold 
             iterationCount += 1
 
             if not REDUCED_OUTPUT:
-                progress = int(((iterationCount%(3373))/(3373))*50)
+                progress = int(((iterationCount%(len(train_data_loader)))/(len(train_data_loader)))*50)
                 print("\rProgress: [", "="*progress, ">", " "*(49-progress), "] ", iterationCount, end="", sep="")
 
         print("\nIterations:", str(iterationCount))

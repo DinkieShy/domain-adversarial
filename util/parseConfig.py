@@ -61,10 +61,10 @@ def readConfigFile(filename, INPUT_DIR):
                 validFile = splitLine[1]
 
             elif splitLine[0] == "iouthreshold":
-                iouThreshold = splitLine[1]
+                iouThreshold = float(splitLine[1])
 
             elif splitLine[0] == "confidencethreshold":
-                confidenceThreshold == splitLine[1]
+                confidenceThreshold == float(splitLine[1])
 
             elif splitLine[0] == "name":
                 name = splitLine[1]
