@@ -53,3 +53,4 @@ Set -c flag when running the inference script to produce `./input/cocoDataset.js
 # TODO:
 Make graph once training is complete using trainingLog.txt  
 CLI flag for switching between models
+Focus on informative graphs, need to demonstrate performance delta between models

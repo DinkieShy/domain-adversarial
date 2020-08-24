@@ -40,8 +40,8 @@ def calculatePrecision(outputs, targets, image_ids, IOUTHRESHOLD, CONFIDENCE_THR
     #Combined format: combinedOutputs[image id](["targetBoxes"] | ["predictedBoxes"] | ["predictionScores"] | ["imageSize"])[index of expected array]
     #Note: predictedBoxes and predictionScores will have the same length, but targetBoxes may not
 
-    totalBoxes = 0
-    truePositive = 0
+    totalBoxes = float(0)
+    truePositive = float(0)
 
     for imageId in image_ids:
         targetBoxes = []

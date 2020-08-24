@@ -137,20 +137,19 @@ def get_valid_transform():
 
 #--- Creating the model -----------------------------------------------------------------------------------------------------
 
-# model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True) #need to replace THIS
-# #replace forward pass of generalizedrcnn, add domain forward pass at line 99
-
-# num_classes = 2  # 1 class (wheat) + background
-
-# # get number of input features for the classifier
-# in_features = model.roi_heads.box_predictor.cls_score.in_features
-
-# # replace the pre-trained head with a new one
-# model.roi_heads.box_predictor = customFasterRCNN(in_features, num_classes)
-
-# # model.roi_heads.box_predictor.add_module("DomainAdversarial", DomainAdversarialHead())
-
 model = DomainAwareRCNN(num_classes=2, num_domains=10)
+
+# model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True) #need to replace THIS
+#replace forward pass of generalizedrcnn, add domain forward pass at line 99
+
+num_classes = 2  # 1 class (wheat) + background
+
+# get number of input features for the classifier
+in_features = model.roi_heads.box_predictor.cls_score.in_features
+
+# replace the pre-trained head with a new one
+model.roi_heads.box_predictor = customFasterRCNN(in_features, num_classes)
+
 
 class Averager:
     def __init__(self):
@@ -239,9 +238,9 @@ def loadCheckpoint(model, optimizer):
     optimizer.load_state_dict(saved['optimizer'])
     return model, optimizer, saved['epoch'], saved['outputPath']
 
-def saveLogData(iterationCount, loss):
+def saveLogData(logData):
     logFile = open(LOG_PATH, "a")
-    logFile.write(",\n" + str([iterationCount, loss]))
+    logFile.write(",\n" + str(logData))
     logFile.close()
 
 epochCount = 0
@@ -274,9 +273,11 @@ for learningRate, timeToRun, epochsUntilChange, minEpochs, performanceThreshold 
         continue
       resume = False
 
-    lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=3, gamma=0.1)
+    # lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=3, gamma=0.1)
+    lr_scheduler = None
 
     while not DONE:
+        logData = {}
         model.train()
         # model.to(torch.double)
         loss_hist.reset()
@@ -309,7 +310,11 @@ for learningRate, timeToRun, epochsUntilChange, minEpochs, performanceThreshold 
                 print("\rProgress: [", "="*progress, ">", " "*(49-progress), "] ", iterationCount, end="", sep="")
 
         print("\nIterations:", str(iterationCount))
-        saveLogData(iterationCount, loss_hist.value)
+        logData['iteration'] = iterationCount
+        logData['totalLoss'] = loss_hist.value
+        logData['domainLoss'] = loss_dict['domainLoss']
+        logData['precision'] = -1
+        logData['changedLR'] = False
         
         # update the learning rate
         if lr_scheduler is not None:
@@ -331,6 +336,8 @@ for learningRate, timeToRun, epochsUntilChange, minEpochs, performanceThreshold 
                 bestPrecision = precision
                 torch.save(model.state_dict(), model_path_base + str(learningRatesToUse.index((learningRate, timeToRun, epochsUntilChange, minEpochs, performanceThreshold))) + "-best.pth")
 
+            logData['precision'] = precision
+
             print("Precision:", precision)
         elif epochCount >= timeToRun+lastChanged and timeToRun != -1:
             DONE = True
@@ -338,7 +345,9 @@ for learningRate, timeToRun, epochsUntilChange, minEpochs, performanceThreshold 
 
         state = {'epoch': epochCount, 'state_dict': model.state_dict(), 'optimizer': optimizer.state_dict(), 'outputPath': OUTPUT_DIR}
         torch.save(state, IN_PROGRESS_PATH)
+        saveLogData(logData)
     print("\nDone with learning rate:", learningRate, "\n")
+    saveLogData({'changedLR': True})
     torch.save(model.state_dict(), model_path_base + str(learningRatesToUse.index((learningRate, timeToRun, epochsUntilChange, minEpochs, performanceThreshold))) + "-final.pth")
     lastChanged = epochCount
 
