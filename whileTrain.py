@@ -310,7 +310,7 @@ for learningRate, timeToRun, epochsUntilChange, minEpochs, performanceThreshold 
         print("\nIterations:", str(iterationCount))
         logData['iteration'] = iterationCount
         logData['totalLoss'] = loss_hist.value
-        logData['domainLoss'] = loss_dict['domainLoss']
+        logData['domainLoss'] = loss_dict['domainLoss'].value
         logData['precision'] = -1
         logData['changedLR'] = False
         
