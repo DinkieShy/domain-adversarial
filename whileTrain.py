@@ -138,9 +138,7 @@ def get_valid_transform():
 #--- Creating the model -----------------------------------------------------------------------------------------------------
 
 model = DomainAwareRCNN(num_classes=2, num_domains=10)
-
-# model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True) #need to replace THIS
-#replace forward pass of generalizedrcnn, add domain forward pass at line 99
+# model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
 
 num_classes = 2  # 1 class (wheat) + background
 
@@ -148,7 +146,7 @@ num_classes = 2  # 1 class (wheat) + background
 in_features = model.roi_heads.box_predictor.cls_score.in_features
 
 # replace the pre-trained head with a new one
-model.roi_heads.box_predictor = customFasterRCNN(in_features, num_classes)
+model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
 
 
 class Averager:
