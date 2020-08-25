@@ -3,16 +3,15 @@ import sys
 import os
 from util.ReadLogFile import readLogFile
 import matplotlib.pyplot as plt
+import datetime
 
 configName = "default"
 args = sys.argv
 for i in range(len(args)):
-    if ".txt" in args[i]:
-        configName = "./configs/" + args[i]
+    if args[i]:
+        configName = args[i]
 
 data = readLogFile(configName)
-
-print(data)
 
 x  = []
 totalLoss = []
@@ -34,3 +33,11 @@ ax.set_xlabel("iteration")
 ax.legend()
 
 plt.show()
+
+saveLocation = "./output/"
+outputPaths = [path for path in os.listdir(saveLocation) if os.path.isdir(saveLocation + path) and configName in path]
+sorted(outputPaths, key=lambda x: datetime.datetime.strptime(x, configName + '_%Y %m %d_%H %M'))
+assert len(outputPaths) > 0, "output for config " + configName + " does not exist"
+saveLocation += outputPaths[0] + "/graph.png"
+
+plt.savefig(saveLocation)

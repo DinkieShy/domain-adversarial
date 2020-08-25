@@ -35,6 +35,7 @@ SHOW_IMAGES = False
 configFile = "./configs/config.txt"
 
 resume = False
+USE_DOMAIN = True
 
 #add flag for using either vanilla fasterrcnn and our domain head
 
@@ -48,6 +49,8 @@ for i in range(len(args)):
         resume = True
     elif ".txt" in args[i]:
         configFile = "./configs/" + args[i]
+    elif args[i] == "-n" or args[i] == "--nodomain":
+        USE_DOMAIN = False
 
 assert os.path.exists(configFile), "Config file " + configFile + " does not exist"
 
@@ -67,7 +70,7 @@ if not resume:
 else:
     outputPaths = [path for path in os.listdir(OUTPUT_DIR) if os.path.isdir(OUTPUT_DIR + path) and configName in path]
     sorted(outputPaths, key=lambda x: datetime.datetime.strptime(x, configName + '_%Y %m %d_%H %M'))
-    OUTPUT_DIR += outputPaths[0]
+    OUTPUT_DIR += outputPaths[0] + "/"
 
 # input()
 
@@ -137,8 +140,10 @@ def get_valid_transform():
 
 #--- Creating the model -----------------------------------------------------------------------------------------------------
 
-model = DomainAwareRCNN(num_classes=2, num_domains=10)
-# model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
+if USE_DOMAIN:
+    model = DomainAwareRCNN(num_classes=2, num_domains=10)
+else:
+    model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
 
 num_classes = 2  # 1 class (wheat) + background
 
@@ -310,10 +315,11 @@ for learningRate, timeToRun, epochsUntilChange, minEpochs, performanceThreshold 
         print("\nIterations:", str(iterationCount))
         logData['iteration'] = iterationCount
         logData['totalLoss'] = loss_hist.value
-        logData['domainLoss'] = loss_dict['domainLoss'].value
+        if USE_DOMAIN:
+            logData['domainLoss'] = loss_dict['domainLoss'].data.cpu().item()
         logData['precision'] = -1
         logData['changedLR'] = False
-        
+
         # update the learning rate
         if lr_scheduler is not None:
             lr_scheduler.step()

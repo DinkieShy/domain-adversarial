@@ -4,15 +4,14 @@ import torch
 
 from torchvision.models.detection.roi_heads import RoIHeads
 
-class GradientReversalLayer(nn.Module):
-    def __init__(self):
-        super(GradientReversalLayer, self).__init__()
-    
-    def forward(self, x):
-        return x
+class GradientReversalLayer(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, x):
+        return x.view_as(x)
 
-    def backward(self, x):
-        return -x
+    @staticmethod
+    def backward(ctx, grad_output):
+        return grad_output.neg()
 
 class Classifier(nn.Module):
   def __init__(self, in_features, domains):
@@ -24,7 +23,6 @@ class Classifier(nn.Module):
         nn.Dropout(),
         nn.Linear(50, domains)
     )
-    # self.classifier = nn.Linear(in_features, domains)
 
   def forward(self, x):
     if x.dim() == 4:
@@ -41,7 +39,7 @@ class DomainAdversarialHead(nn.Module):
     self.domain_count = domains
 
   def forward(self, features, proposals, labels=None):
-    y = self.gradientReversal.forward(features)
+    y = self.gradientReversal.apply(features)
     predictions = self.classifier(y)
 
     if self.training:
