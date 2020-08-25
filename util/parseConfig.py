@@ -6,7 +6,7 @@ class LearningRateCascade():
         self.epochsToRun = -1
         self.epochsUntilChange = -1
         self.minEpochs = 0
-        self.performanceThreshold = 0.005
+        self.performanceThreshold = 0.05
 
     def assertValid(self):
         assert self.learningRate != -1, "Learning rate must be set in config file"

@@ -18,7 +18,7 @@ confidenceThreshold = 0.275
 # learningRate = the learning rate to be used
 # epochsToRun = train with learning rate for a fixed number of epochsToRun (overrides all other settings, doesn't test performance)
 # epochsUntilChange = test on the validation set after each epoch, when performance doesn't change in this many epochs, cascade.
-# performanceThreshold = threshold for what's not considered a performance change (Default: 0.005)
+# performanceThreshold = threshold for what's not considered a performance change (Default: 0.05)
 # minEpochs = train for this many epochs before testing on the validation set starts (Default: 0)
 
 learningRate = 0.001
