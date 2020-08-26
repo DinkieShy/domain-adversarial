@@ -69,7 +69,7 @@ if not resume:
     OUTPUT_DIR += configName + "_" + currentTimeString + "/"
 else:
     outputPaths = [path for path in os.listdir(OUTPUT_DIR) if os.path.isdir(OUTPUT_DIR + path) and configName in path]
-    sorted(outputPaths, key=lambda x: datetime.datetime.strptime(x, configName + '_%Y %m %d_%H %M'))
+    outputPaths.sort(key=lambda x: datetime.datetime.strptime(x, configName + '_%Y %m %d_%H %M'), reverse=True)
     OUTPUT_DIR += outputPaths[0] + "/"
 
 # input()

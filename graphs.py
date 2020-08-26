@@ -3,7 +3,7 @@ import sys
 import os
 from util.ReadLogFile import readLogFile
 import matplotlib.pyplot as plt
-import datetime
+from datetime import datetime
 
 configName = "default"
 args = sys.argv
@@ -36,7 +36,9 @@ plt.show()
 
 saveLocation = "./output/"
 outputPaths = [path for path in os.listdir(saveLocation) if os.path.isdir(saveLocation + path) and configName in path]
-sorted(outputPaths, key=lambda x: datetime.datetime.strptime(x, configName + '_%Y %m %d_%H %M'))
+print(outputPaths)
+outputPaths.sort(key=lambda x: datetime.strptime(x, configName + '_%Y %m %d_%H %M'), reverse=True)
+print(outputPaths)
 assert len(outputPaths) > 0, "output for config " + configName + " does not exist"
 saveLocation += outputPaths[0] + "/graph.png"
 

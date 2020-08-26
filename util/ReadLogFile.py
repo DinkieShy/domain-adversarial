@@ -12,7 +12,7 @@ def readLogFile(configName):
     LOG_FILE = "./output/"
 
     outputPaths = [path for path in os.listdir(LOG_FILE) if os.path.isdir(LOG_FILE + path) and configName in path]
-    sorted(outputPaths, key=lambda x: datetime.datetime.strptime(x, configName + '_%Y %m %d_%H %M'))
+    outputPaths.sort(key=lambda x: datetime.datetime.strptime(x, configName + '_%Y %m %d_%H %M'), reverse=True)
     assert len(outputPaths) > 0, "output for config " + configName + " does not exist"
     LOG_FILE += outputPaths[0] + "/trainingLog.txt"
 
