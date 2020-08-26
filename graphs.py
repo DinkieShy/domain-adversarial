@@ -36,9 +36,7 @@ plt.show()
 
 saveLocation = "./output/"
 outputPaths = [path for path in os.listdir(saveLocation) if os.path.isdir(saveLocation + path) and configName in path]
-print(outputPaths)
 outputPaths.sort(key=lambda x: datetime.strptime(x, configName + '_%Y %m %d_%H %M'), reverse=True)
-print(outputPaths)
 assert len(outputPaths) > 0, "output for config " + configName + " does not exist"
 saveLocation += outputPaths[0] + "/graph.png"
 
