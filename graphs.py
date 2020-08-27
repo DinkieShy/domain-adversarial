@@ -13,21 +13,27 @@ for i in range(len(args)):
 
 data = readLogFile(configName)
 
-x  = []
-totalLoss = []
-domainLoss = []
-precision = []
+lines = []
+line = {'x': [], 'totalLoss': [], 'domainLoss': [], 'precision': []}
 
 for i in range(len(data)):
-    x.append(data[i]['iteration'])
-    totalLoss.append(data[i]['totalLoss'])
-    domainLoss.append(data[i]['domainLoss'])
-    precision.append(None if data[i]['precision'] == -1 else data[i]['precision'])
+    if 'iteration' in data[i]:
+        line['x'].append(data[i]['iteration'])
+        line['totalLoss'].append(data[i]['totalLoss'])
+        line['domainLoss'].append(data[i]['domainLoss'])
+        line['precision'].append(None if data[i]['precision'] == -1 else data[i]['precision'])
+    else:
+        lines.append(line)
+        line = {'x': [], 'totalLoss': [], 'domainLoss': [], 'precision': []}
 
+lines.append(line)
+
+plt.style.use("seaborn")
 fig, ax = plt.subplots()
-ax.plot(x, totalLoss, label="total loss")
-ax.plot(x, domainLoss, label="domain head loss")
-ax.plot(x, precision, label="precision")
+for i in range(len(lines)):
+    ax.plot(lines[i]['x'], lines[i]['totalLoss'], label="total loss" if i == 0 else None, color="r")
+    ax.plot(lines[i]['x'], lines[i]['domainLoss'], label="domain head loss" if i == 0 else None, color="g")
+    ax.plot(lines[i]['x'], lines[i]['precision'], label="precision" if i == 0 else None, color="b")
 
 ax.set_xlabel("iteration")
 ax.legend()
