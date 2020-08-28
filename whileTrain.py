@@ -61,7 +61,7 @@ trainFile, validFile, IOU_THRESHOLD, CONFIDENCE_THRESHOLD, learningRates, config
 for i in learningRates:
     learningRatesToUse.append((i.learningRate, i.epochsToRun, i.epochsUntilChange, i.minEpochs, i.performanceThreshold))
 
-VALIDATING = validFile == -1
+VALIDATING = validFile != -1
 
 if not resume:
     currentTime = datetime.datetime.today()
@@ -70,7 +70,7 @@ if not resume:
 
     OUTPUT_DIR += configName + "_" + currentTimeString + "/"
 else:
-    outputPaths = [path for path in os.listdir(LOG_FILE) if os.path.isdir(LOG_FILE + path) and path.split('_')[0] == configName]
+    outputPaths = [path for path in os.listdir(OUTPUT_DIR) if os.path.isdir(OUTPUT_DIR + path) and path.split('_')[0] == configName]
     outputPaths.sort(key=lambda x: datetime.datetime.strptime(x, configName + '_%Y %m %d_%H %M'), reverse=True)
     OUTPUT_DIR += outputPaths[0] + "/"
 

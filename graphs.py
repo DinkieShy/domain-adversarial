@@ -41,7 +41,7 @@ ax.legend()
 plt.show()
 
 saveLocation = "./output/"
-outputPaths = [path for path in os.listdir(LOG_FILE) if os.path.isdir(LOG_FILE + path) and path.split('_')[0] == configName]
+outputPaths = [path for path in os.listdir(saveLocation) if os.path.isdir(saveLocation + path) and path.split('_')[0] == configName]
 outputPaths.sort(key=lambda x: datetime.strptime(x, configName + '_%Y %m %d_%H %M'), reverse=True)
 assert len(outputPaths) > 0, "output for config " + configName + " does not exist"
 saveLocation += outputPaths[0] + "/graph.png"
