@@ -61,6 +61,8 @@ trainFile, validFile, IOU_THRESHOLD, CONFIDENCE_THRESHOLD, learningRates, config
 for i in learningRates:
     learningRatesToUse.append((i.learningRate, i.epochsToRun, i.epochsUntilChange, i.minEpochs, i.performanceThreshold))
 
+VALIDATING = validFile == -1
+
 if not resume:
     currentTime = datetime.datetime.today()
     currentTimeString = str(currentTime.year) + " " + str(currentTime.month) + " " + \
@@ -72,37 +74,17 @@ else:
     outputPaths.sort(key=lambda x: datetime.datetime.strptime(x, configName + '_%Y %m %d_%H %M'), reverse=True)
     OUTPUT_DIR += outputPaths[0] + "/"
 
-# input()
-
 # Saving
 model_path_base = OUTPUT_DIR + "checkpoints/lr-" # Saves best and final for each learning rate
 IN_PROGRESS_PATH = OUTPUT_DIR + "checkpoints/trainingInProgess.pth.tar" # Path to save in-progress model
 LOG_PATH = OUTPUT_DIR + "trainingLog.txt"
 
 train_df = pd.read_csv(INPUT_DIR + trainFile) # CSV containing the training set
-valid_df = pd.read_csv(INPUT_DIR + validFile) # CSV containing the validation set
-
-directories = [INPUT_DIR, OUTPUT_DIR, IMAGE_DIR, OUTPUT_DIR + "checkpoints/"]
-
-for directory in directories:
-    if not os.path.exists(directory):
-        os.mkdir(directory)
 
 train_df['x'] = -1
 train_df['y'] = -1
 train_df['w'] = -1
 train_df['h'] = -1
-
-valid_df['x'] = -1
-valid_df['y'] = -1
-valid_df['w'] = -1
-valid_df['h'] = -1
-
-def expand_bbox(x):
-    r = np.array(re.findall("([0-9]+[.]?[0-9]*)", x))
-    if len(r) == 0:
-        r = [-1, -1, -1, -1]
-    return r
 
 train_df[['x', 'y', 'w', 'h']] = np.stack(train_df['bbox'].apply(lambda x: expand_bbox(x)))
 train_df.drop(columns=['bbox'], inplace=True)
@@ -111,18 +93,40 @@ train_df['y'] = train_df['y'].astype(np.float)
 train_df['w'] = train_df['w'].astype(np.float)
 train_df['h'] = train_df['h'].astype(np.float)
 
-valid_df[['x', 'y', 'w', 'h']] = np.stack(valid_df['bbox'].apply(lambda x: expand_bbox(x)))
-valid_df.drop(columns=['bbox'], inplace=True)
-valid_df['x'] = valid_df['x'].astype(np.float)
-valid_df['y'] = valid_df['y'].astype(np.float)
-valid_df['w'] = valid_df['w'].astype(np.float)
-valid_df['h'] = valid_df['h'].astype(np.float)
-
 train_ids = train_df['image_id'].unique()
-valid_ids = valid_df['image_id'].unique()
 
 print("Training on:", len(train_ids))
-print("Evaluating on:", len(valid_ids))
+
+if VALIDATING:
+    valid_df = pd.read_csv(INPUT_DIR + validFile) # CSV containing the validation set
+
+    valid_df['x'] = -1
+    valid_df['y'] = -1
+    valid_df['w'] = -1
+    valid_df['h'] = -1
+
+    valid_df[['x', 'y', 'w', 'h']] = np.stack(valid_df['bbox'].apply(lambda x: expand_bbox(x)))
+    valid_df.drop(columns=['bbox'], inplace=True)
+    valid_df['x'] = valid_df['x'].astype(np.float)
+    valid_df['y'] = valid_df['y'].astype(np.float)
+    valid_df['w'] = valid_df['w'].astype(np.float)
+    valid_df['h'] = valid_df['h'].astype(np.float)
+
+    valid_ids = valid_df['image_id'].unique()
+
+    print("Evaluating on:", len(valid_ids))
+
+directories = [INPUT_DIR, OUTPUT_DIR, IMAGE_DIR, OUTPUT_DIR + "checkpoints/"]
+
+for directory in directories:
+    if not os.path.exists(directory):
+        os.mkdir(directory)
+
+def expand_bbox(x):
+    r = np.array(re.findall("([0-9]+[.]?[0-9]*)", x))
+    if len(r) == 0:
+        r = [-1, -1, -1, -1]
+    return r
 
 # Albumentations
 def get_train_transform():
@@ -153,7 +157,6 @@ in_features = model.roi_heads.box_predictor.cls_score.in_features
 # replace the pre-trained head with a new one
 model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
 
-
 class Averager:
     def __init__(self):
         self.current_total = 0.0
@@ -178,7 +181,6 @@ def collate_fn(batch):
     return tuple(zip(*batch))
 
 train_dataset = WheatDataset(train_df, IMAGE_DIR, get_train_transform())
-valid_dataset = WheatDataset(valid_df, IMAGE_DIR, get_valid_transform())
 
 train_data_loader = DataLoader(
     train_dataset,
@@ -189,14 +191,17 @@ train_data_loader = DataLoader(
     collate_fn=collate_fn
 )
 
-valid_data_loader = DataLoader(
-    valid_dataset,
-    batch_size=1,
-    shuffle=False,
-    num_workers=0,
-    pin_memory=True,
-    collate_fn=collate_fn
-)
+if VALIDATING:
+    valid_dataset = WheatDataset(valid_df, IMAGE_DIR, get_valid_transform())
+
+    valid_data_loader = DataLoader(
+        valid_dataset,
+        batch_size=1,
+        shuffle=False,
+        num_workers=0,
+        pin_memory=True,
+        collate_fn=collate_fn
+    )
 
 device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 # device = torch.device('cpu')

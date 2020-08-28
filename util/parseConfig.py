@@ -79,6 +79,8 @@ def readConfigFile(filename, INPUT_DIR):
     assert path.exists(INPUT_DIR + trainFile), "Train set does not exist: " + INPUT_DIR + trainFile
     if validating:
         assert path.exists(INPUT_DIR + validFile), "Validation set does not exist " + INPUT_DIR + validFile
+    else:
+        validFile = -1
     
     return trainFile, validFile, iouThreshold, confidenceThreshold, learningRates, name
     
