@@ -79,6 +79,12 @@ model_path_base = OUTPUT_DIR + "checkpoints/lr-" # Saves best and final for each
 IN_PROGRESS_PATH = OUTPUT_DIR + "checkpoints/trainingInProgess.pth.tar" # Path to save in-progress model
 LOG_PATH = OUTPUT_DIR + "trainingLog.txt"
 
+def expand_bbox(x):
+    r = np.array(re.findall("([0-9]+[.]?[0-9]*)", x))
+    if len(r) == 0:
+        r = [-1, -1, -1, -1]
+    return r
+
 train_df = pd.read_csv(INPUT_DIR + trainFile) # CSV containing the training set
 
 train_df['x'] = -1
@@ -121,12 +127,6 @@ directories = [INPUT_DIR, OUTPUT_DIR, IMAGE_DIR, OUTPUT_DIR + "checkpoints/"]
 for directory in directories:
     if not os.path.exists(directory):
         os.mkdir(directory)
-
-def expand_bbox(x):
-    r = np.array(re.findall("([0-9]+[.]?[0-9]*)", x))
-    if len(r) == 0:
-        r = [-1, -1, -1, -1]
-    return r
 
 # Albumentations
 def get_train_transform():
