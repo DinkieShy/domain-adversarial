@@ -75,9 +75,9 @@ def readConfigFile(filename, INPUT_DIR):
         if i.epochsToRun == -1:
             validating = True
 
-    assert path.exists(INPUT_DIR + trainFile), "Train set does not exist"
+    assert path.exists(INPUT_DIR + trainFile), "Train set does not exist: " + INPUT_DIR + trainFile
     if validating:
-        assert path.exists(INPUT_DIR + validFile), "Validation set does not exist"
+        assert path.exists(INPUT_DIR + validFile), "Validation set does not exist " + INPUT_DIR + validFile
     
     return trainFile, validFile, iouThreshold, confidenceThreshold, learningRates, name
     
