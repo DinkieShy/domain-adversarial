@@ -68,7 +68,7 @@ if not resume:
 
     OUTPUT_DIR += configName + "_" + currentTimeString + "/"
 else:
-    outputPaths = [path for path in os.listdir(OUTPUT_DIR) if os.path.isdir(OUTPUT_DIR + path) and configName in path]
+    outputPaths = [path for path in os.listdir(LOG_FILE) if os.path.isdir(LOG_FILE + path) and path.split('_')[0] == configName]
     outputPaths.sort(key=lambda x: datetime.datetime.strptime(x, configName + '_%Y %m %d_%H %M'), reverse=True)
     OUTPUT_DIR += outputPaths[0] + "/"
 
@@ -298,6 +298,9 @@ for learningRate, timeToRun, epochsUntilChange, minEpochs, performanceThreshold 
             loss_dict = model(images, targets)
 
             losses = sum(loss for loss in loss_dict.values())
+
+            if USE_DOMAIN:
+                losses -= loss_dict['domainLoss'].data.cpu().item()
 
             loss_value = losses.item()
 
