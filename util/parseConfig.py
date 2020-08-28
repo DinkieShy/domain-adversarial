@@ -35,7 +35,8 @@ def readConfigFile(filename, INPUT_DIR):
 
     for line in content:
         if line[0] != "#":
-            splitLine = [string.strip().lower() for string in line.split("=")]
+            splitLine = [string.strip() for string in line.split("=")]
+            splitLine[0] = splitLine[0].lower()
 
             if splitLine[0] == "learningrate":
                 if learningRates[-1].isValid():
