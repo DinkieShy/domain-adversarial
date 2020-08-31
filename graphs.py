@@ -23,8 +23,9 @@ for i in range(len(data)):
         line['totalLoss'].append(data[i]['totalLoss'])
         line['precision'].append(None if data[i]['precision'] == -1 else data[i]['precision'])
         if domainLossFound and 'domainLoss' in data[i]:
-            domainLossFound = False
             line['domainLoss'].append(data[i]['domainLoss'])
+        else:
+            domainLossFound = False
     else:
         lines.append(line)
         line = {'x': [], 'totalLoss': [], 'domainLoss': [], 'precision': []}
