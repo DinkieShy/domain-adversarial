@@ -37,7 +37,7 @@ test = train_df[mask]
 
 print("Saving...")
 
-train.to_csv("./input/trainDomain.csv")
-test.to_csv("./input/testDomain.csv")
+train.to_csv("./input/trainDomain.csv", index=False)
+test.to_csv("./input/testDomain.csv", index=False)
 
 print("Done.")

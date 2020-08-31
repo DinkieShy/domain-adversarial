@@ -21,7 +21,7 @@ from torchvision.models.detection.rpn import AnchorGenerator
 from torch.utils.data import DataLoader, Dataset
 from torch.utils.data.sampler import SequentialSampler
 
-from models.fasterRCNNWrapper import customFasterRCNN
+from models.NotGeneralisedRCNN import DomainAwareRCNN
 from util.DatasetToCoco import convertDataset
 
 import json
@@ -35,6 +35,7 @@ COCO = False
 SHOW_IMAGES = False
 IMAGES_TO_SHOW = 0
 DETECTION_THRESHOLD = 0
+USE_DOMAIN = True
 
 args = sys.argv
 for i in range(len(args)):
@@ -49,6 +50,8 @@ for i in range(len(args)):
         IMAGES_TO_SHOW = int(args[i+1])
     elif args[i] == "-t" or args[i] == "--threshold":
         DETECTION_THRESHOLD = int(args[i+1])
+    elif args[i] == "-n" or args[i] == "--nodomain":
+        USE_DOMAIN = False
 
 assert len(WEIGHTS_FILES) > 0, "Model not selected, be sure to pass a weights file"
 assert testFile != "", "Test set not selected, be sure to pass a csv file containing a test set"
@@ -114,14 +117,12 @@ def get_test_transform():
         ToTensorV2(p=1.0)
     ])
 
-model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=False, pretrained_backbone=False)
-
-device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
-
-if not torch.cuda.is_available():
-    print("CUDA NOT AVAILABLE!!!")
+if USE_DOMAIN:
+    model = DomainAwareRCNN(num_classes=2, num_domains=10)
 else:
-    print("Cuda available!")
+    model = torchvision.models.detection.fasterrcnn_resnet50_fpn(pretrained=True)
+
+print(model)
 
 num_classes = 2  # 1 class (wheat) + background
 
@@ -129,7 +130,16 @@ num_classes = 2  # 1 class (wheat) + background
 in_features = model.roi_heads.box_predictor.cls_score.in_features
 
 # replace the pre-trained head with a new one
-model.roi_heads.box_predictor = customFasterRCNN(in_features, num_classes)
+model.roi_heads.box_predictor = FastRCNNPredictor(in_features, num_classes)
+
+print(model)
+
+device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+
+if not torch.cuda.is_available():
+    print("CUDA NOT AVAILABLE!!!")
+else:
+    print("Cuda available!")
 
 def collate_fn(batch):
     return tuple(zip(*batch))
@@ -159,7 +169,11 @@ def format_bbox_string(boxes):
     return strings
 
 for weights in WEIGHTS_FILES:
-    model.load_state_dict(torch.load(weights))
+    try:
+        model.load_state_dict(torch.load(weights))
+    except RuntimeError:
+        print("ERROR LOADING MODEL: Did you mean to use the --nodomain flag?")
+        exit()
 
     x = model.to(device)
     model.eval()

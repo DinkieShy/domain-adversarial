@@ -12,6 +12,7 @@ for i in range(len(args)):
         configName = args[i]
 
 data = readLogFile(configName)
+domainLossFound = True
 
 lines = []
 line = {'x': [], 'totalLoss': [], 'domainLoss': [], 'precision': []}
@@ -20,8 +21,10 @@ for i in range(len(data)):
     if 'iteration' in data[i]:
         line['x'].append(data[i]['iteration'])
         line['totalLoss'].append(data[i]['totalLoss'])
-        line['domainLoss'].append(data[i]['domainLoss'])
         line['precision'].append(None if data[i]['precision'] == -1 else data[i]['precision'])
+        if domainLossFound and 'domainLoss' in data[i]:
+            domainLossFound = False
+            line['domainLoss'].append(data[i]['domainLoss'])
     else:
         lines.append(line)
         line = {'x': [], 'totalLoss': [], 'domainLoss': [], 'precision': []}
@@ -32,8 +35,10 @@ plt.style.use("seaborn")
 fig, ax = plt.subplots()
 for i in range(len(lines)):
     ax.plot(lines[i]['x'], lines[i]['totalLoss'], label="total loss" if i == 0 else None, color="r")
-    ax.plot(lines[i]['x'], lines[i]['domainLoss'], label="domain head loss" if i == 0 else None, color="g")
-    ax.plot(lines[i]['x'], lines[i]['precision'], label="precision" if i == 0 else None, color="b")
+    if len(line['domainLoss']) > 0:
+        ax.plot(lines[i]['x'], lines[i]['domainLoss'], label="domain head loss" if i == 0 else None, color="g")
+    if not all(ii is None for ii in lines[i]['precision']):
+        ax.plot(lines[i]['x'], lines[i]['precision'], label="precision" if i == 0 else None, color="b")
 
 ax.set_xlabel("iteration")
 ax.legend()
