@@ -22,10 +22,12 @@ for i in range(len(data)):
         line['x'].append(data[i]['iteration'])
         line['totalLoss'].append(data[i]['totalLoss'])
         line['precision'].append(None if data[i]['precision'] == -1 else data[i]['precision'])
-        if domainLossFound and 'domainLoss' in data[i]:
-            line['domainLoss'].append(data[i]['domainLoss'])
-        else:
-            domainLossFound = False
+        if domainLossFound:
+            try:
+                line['domainLoss'].append(data[i]['domainLoss'])
+            except KeyError:
+                domainLossFound = False
+                print("domain loss not found")
     else:
         lines.append(line)
         line = {'x': [], 'totalLoss': [], 'domainLoss': [], 'precision': []}
@@ -36,7 +38,7 @@ plt.style.use("seaborn")
 fig, ax = plt.subplots()
 for i in range(len(lines)):
     ax.plot(lines[i]['x'], lines[i]['totalLoss'], label="total loss" if i == 0 else None, color="r")
-    if len(line['domainLoss']) > 0:
+    if domainLossFound:
         ax.plot(lines[i]['x'], lines[i]['domainLoss'], label="domain head loss" if i == 0 else None, color="g")
     if not all(ii is None for ii in lines[i]['precision']):
         ax.plot(lines[i]['x'], lines[i]['precision'], label="precision" if i == 0 else None, color="b")
@@ -44,6 +46,7 @@ for i in range(len(lines)):
 ax.set_xlabel("iteration")
 ax.legend()
 
+plt.ylim(0.2, 1.2)
 plt.show()
 
 saveLocation = "./output/"
